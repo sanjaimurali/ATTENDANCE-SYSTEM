@@ -1,0 +1,68 @@
+-- schema.sql
+
+CREATE DATABASE IF NOT EXISTS attendance_db;
+USE attendance_db;
+
+CREATE TABLE IF NOT EXISTS users (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    role ENUM('STUDENT', 'FACULTY', 'ADMIN') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS students (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    dept VARCHAR(100) NOT NULL,
+    year INT NOT NULL,
+    section VARCHAR(10) NOT NULL,
+    roll_number VARCHAR(50) NOT NULL UNIQUE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS faculty (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    dept VARCHAR(100) NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS subjects (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    code VARCHAR(50) NOT NULL UNIQUE,
+    dept VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS classes (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    dept VARCHAR(100) NOT NULL,
+    year INT NOT NULL,
+    section VARCHAR(10) NOT NULL,
+    subject_id BIGINT NOT NULL,
+    faculty_id BIGINT NOT NULL,
+    FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
+    FOREIGN KEY (faculty_id) REFERENCES faculty(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS timetables (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    class_id BIGINT NOT NULL,
+    day_of_week VARCHAR(20) NOT NULL,
+    period INT NOT NULL,
+    room VARCHAR(50),
+    FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS attendance (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    student_id BIGINT NOT NULL,
+    class_id BIGINT NOT NULL,
+    date DATE NOT NULL,
+    status ENUM('PRESENT', 'ABSENT') NOT NULL,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+    FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE,
+    UNIQUE KEY uk_attendance (student_id, class_id, date)
+);
